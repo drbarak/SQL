@@ -9,3 +9,8 @@ CREATE TABLE salary2 (
 DESC salary2;
 INSERT INTO salary2(amount, employee_id) VALUES (10000,1);
 SELECT * FROM salary2;
+
+-- can drop the index after creation
+# single line comment can be either -- or #
+ALTER TABLE salary2 DROP INDEX idx_amount; 
+DESC salary2;
