@@ -1,20 +1,24 @@
-/* can add INDEX when creating a table (can use the keywork KEY instead of INDEX) */
+/*  ---S03-L01----------------  Indexes ----------------
+can add INDEX when creating a table (can use the keywork KEY instead of INDEX)
+ */
 USE sample_staff;
+DROP TABLE IF EXISTS sample_staff.salary2;
 CREATE TABLE salary2 (
 	id INT AUTO_INCREMENT PRIMARY KEY,
     amount DECIMAL(11,2) NOT NULL DEFAULT 0,
     employee_id INT NOT NULL DEFAULT 0,
-    INDEX idx_amount (amount)
+    INDEX idx_amount (amount),	/* define an index on a single column */
+    KEY idx_employee_id (employee_id)	/* or use the keyword KEY */
     );
 DESC salary2;
 INSERT INTO salary2(amount, employee_id) VALUES (10000,1);
 SELECT * FROM salary2;
 
-
 -- can drop the index after creation
 # single line comment can be either -- or #
 ALTER TABLE salary2 DROP INDEX idx_amount; 
 DESC salary2;
+DROP TABLE IF EXISTS sample_staff.salary2;
 
 SHOW INDEXES FROM salary;
 ALTER TABLE salary DROP INDEX idx_salary_amount;
@@ -47,7 +51,7 @@ SHOW INDEXES FROM sample_staff.salary;
 #EXPLAIN
 SELECT *
 FROM sample_staff.salary
-WHERE 1=1
+WHERE 1=1department
 	AND salary.salary_amount > 150000
     AND from_date >= '1990-01-01'
 ;
@@ -55,3 +59,8 @@ WHERE 1=1
 	id	select_type	table	partitions	type	possible_keys	key	key_len	ref	rows	filtered	Extra
 	1	SIMPLE	salary		range	idx_salary_amount	idx_salary_amount	5		179676	33.33	Using index condition; Using where; Using MRR
 */
+/* ---S03-L02----------------  Unique Indexes ----------------
+Add unique key to department table.
+*/
+ALTER TABLE `department` ADD UNIQUE INDEX `ak_department` (`name`);
+# See a unique key in salary table.
