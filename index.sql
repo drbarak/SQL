@@ -1,6 +1,6 @@
 /*  ---S03-L01----------------  Indexes ----------------
 can add INDEX when creating a table (can use the keywork KEY instead of INDEX)
- */
+*/
 USE sample_staff;
 DROP TABLE IF EXISTS sample_staff.salary2;
 CREATE TABLE salary2 (
@@ -213,3 +213,65 @@ FROM
 WHERE 1=1
 	AND employee.personal_code = '7C-91159'
 ;
+
+/* ---S03-P01---------------- Coding practice
+- Create a new partial index on sample_staff.employee.personal_code with the first 2 characters only.
+- Select an employee with personal_code = "AA-751492" and check in execution plan which index was used. 
+- Try to use another index to verify the select would be slower or faster.
+- Finally, compare the size of the 2 indexes:
+	The original ak_employee index
+	Your newly created index
+The result is in attached PDF: S03-P01-Practice.pdf
+*/
+ALTER TABLE sample_staff.employee ADD INDEX idx_personal_code (personal_code(2));
+#EXPLAIN
+SELECT *
+FROM sample_staff.employee
+WHERE 1=1
+	AND employee.personal_code = "AA-751492"
+; /* used ak_employee index, took 0 seconds, inspected 1 row */
+#EXPLAIN
+SELECT * 
+FROM sample_staff.employee
+USE INDEX (idx_personal_code)
+WHERE 1=1
+	AND employee.personal_code = "AA-751492"
+; /* took 0.047 seonds - slower, when used  idx_personal_code index - inspected 1253 rows*/
+
+-- show indexes sizes
+-- It's good to run ANALYZE TABLE before checking index or table size
+ANALYZE TABLE `sample_staff`.`employee`;
+
+SELECT /* Select all indexes from table 'employee' and their size */
+	sum(`stat_value`) AS pages,
+	`index_name` AS index_name,
+	ROUND(sum(`stat_value`) * @@innodb_page_size / 1024 / 1024, 2) AS size_mb
+FROM `mysql`.`innodb_index_stats`
+WHERE 1=1
+	AND `table_name` = 'employee'
+	AND `database_name` = 'sample_staff'
+	AND `stat_description` = 'Number of pages in the index'
+GROUP BY
+	`index_name`
+;
+
+/* ---S03-P02---------------- Coding practice
+These queries run longer than 100ms. How would you make them run in less than 10ms?
+Verify the execution plan.
+*/
+SELECT `contract`.`archive_code`
+FROM `contract`
+WHERE 1=1
+	AND `contract`.`archive_code` = 'DA970'
+	AND `contract`.`deleted_flag` = 0
+	AND `contract`.`sign_date` >= '1990-01-01'
+;
+
+SELECT `contract`.`archive_code`
+FROM `contract`
+WHERE 1=1
+	AND `contract`.`archive_code` = 'DA970'
+	AND `contract`.`deleted_flag` = 0
+;
+/* after adding this single index both queries run in 0 seconds */
+ALTER TABLE sample_staff.contract ADD INDEX idx_archive_code(archive_code);
